@@ -1,5 +1,5 @@
 import RPi.GPIO as GPIO
-import time
+
 #******************************************                        
 # The Class "Lampy" is defined here
 class Lampy:
@@ -8,18 +8,30 @@ class Lampy:
         self.period = period
         self.lampState = "low"
         self.previous = 0
+        self.override = False
+        self.overrideValue = "low"
+        GPIO.setmode(GPIO.BOARD)
+
+        GPIO.setup(self.gpioPin, GPIO.OUT)   
+        GPIO.output(self.gpioPin, GPIO.HIGH)
     
     #within Lampy, create a method to check lamp timer
     # and if expired, to swap the LED between off and on
     def LampCheck(self):
-        if self.time - self.previous > self.period:
-            self.previous = self.time
-            if self.lampState == "low":
-                self.lampState = "high"
-                GPIO.output(self.gpioPin, GPIO.HIGH) 
+        if self.override == True:
+            if self.overrideValue == "high":
+                GPIO.output(self.gpioPin, GPIO.HIGH)
             else:
-                self.lampState = "low"    
                 GPIO.output(self.gpioPin, GPIO.LOW)
+        else:
+            if self.time - self.previous > self.period:
+                self.previous = self.time
+                if self.lampState == "low":
+                    self.lampState = "high"
+                    GPIO.output(self.gpioPin, GPIO.HIGH) 
+                else:
+                    self.lampState = "low"    
+                    GPIO.output(self.gpioPin, GPIO.LOW)
             #print(str(self.gpioPin) + ' ' + str(self.lampState))
 # This ends the definition of "Lampy"
 #******************************************
@@ -36,6 +48,9 @@ class Switchy:
         self.dbCtr = 0
         self.prevdbCtr = 0
         self.switchState = False
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(self.swPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        #GPIO.setup(18, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
     # the debounce method exists to debounce a switch
     def debounce(self):
